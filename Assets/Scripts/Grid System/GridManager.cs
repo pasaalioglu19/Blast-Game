@@ -1,10 +1,14 @@
+using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor.Experimental.GraphView;
-using UnityEditor.Rendering;
+using System.Net.NetworkInformation;
+using UnityEngine;
+using static GridObject;
 
 public class GridManager : MonoBehaviour
 {
+    private IBlastHandler blastHandler;
+    private CubeSpriteOrganizer cubeSpriteOrganizer;
+
     private int gridRows = 6;
     private int gridColumns = 6;
     private List<int> colorsSelected = new ();
@@ -26,6 +30,11 @@ public class GridManager : MonoBehaviour
 
     private GameObject[,] gridArray;
 
+    private void Start()
+    {
+        blastHandler = new BlastHandler();
+    }
+
     public void InitializeGridWithLevelData(int gridRows, int gridColumns, int colorsCount, int lastDefaultIconIndex, int lastFirstIconIndex, int lastSecondIconIndex)
     {
         this.gridRows = gridRows;
@@ -46,13 +55,27 @@ public class GridManager : MonoBehaviour
                 GameObject newObject = null;
                 int selectedColorIndex = colorsSelected[Random.Range(0, colorsSelected.Count)];
                 newObject = Instantiate(GridObjectData.ObjectPrefabs[selectedColorIndex], new Vector3(x * xyoffSet, y * xyoffSet, 0), Quaternion.identity);
-                SetupGridEntity(newObject, x, y);
+                SetupGridEntity(newObject, x, y, selectedColorIndex);
             }
         }
 
+        cubeSpriteOrganizer = new CubeSpriteOrganizer(GridObjectData, lastDefaultIconIndex, lastFirstIconIndex, lastSecondIconIndex);
         AdjustCamera();
         AdjustBackground();
-        //StartCoroutine(HintCoroutine());
+        StartCoroutine(HintCoroutine());
+    }
+
+    private IEnumerator HintCoroutine()
+    {
+        yield return new WaitForSeconds(0.1f);
+        CheckHint();
+    }
+
+    private void CheckHint()
+    {
+        Dictionary<int, List<Vector2Int>> cubeGroups = new Dictionary<int, List<Vector2Int>>();
+        blastHandler.FindGroups(gridArray, gridColumns, gridRows, cubeGroups);
+        cubeSpriteOrganizer.OrganizeCubeSprites(cubeGroups, gridArray);
     }
 
     private void SelectColor(int colorsCount)
@@ -73,11 +96,13 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    private void SetupGridEntity(GameObject newEntity, int x, int y)
+    private void SetupGridEntity(GameObject newEntity, int x, int y, int selectedColorIndex)
     {
         GridEntity gridEntity = newEntity.GetComponent<GridEntity>();
         gridEntity.SetGridX(x);
         gridEntity.SetGridY(y);
+        gridEntity.SetIsCube(true);
+        newEntity.GetComponent<GridObject>().SetColor(selectedColorIndex);
         newEntity.GetComponent<SpriteRenderer>().sortingOrder = y + 2; //Render order layout was provided according to y coordinates
         gridArray[x, y] = newEntity;
     }
@@ -94,4 +119,5 @@ public class GridManager : MonoBehaviour
 
         camera.transform.position = new Vector3((gridColumns - 1) * xyoffSet / 2, (gridRows + 4.6F) * xyoffSet / 2, -10);
     }
+
 }
