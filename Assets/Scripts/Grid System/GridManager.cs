@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.Rendering;
-using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
@@ -95,5 +94,4 @@ public class GridManager : MonoBehaviour
 
         camera.transform.position = new Vector3((gridColumns - 1) * xyoffSet / 2, (gridRows + 4.6F) * xyoffSet / 2, -10);
     }
-
 }
