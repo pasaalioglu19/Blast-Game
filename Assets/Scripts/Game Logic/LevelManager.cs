@@ -87,7 +87,7 @@ public class LevelManager : MonoBehaviour
 
     private void InitializeLevel()
     {
-        //gridManager.InitializeGridWithLevelData(currentLevelData.grid_rows, currentLevelData.grid_columns, currentLevelData.colors_count, currentLevelData.last_default_icon_index, currentLevelData.last_first_icon_index, currentLevelData.last_second_icon_index);
+        gridManager.InitializeGridWithLevelData(currentLevelData.grid_rows, currentLevelData.grid_columns, currentLevelData.colors_count, currentLevelData.last_default_icon_index, currentLevelData.last_first_icon_index, currentLevelData.last_second_icon_index);
     }
 
     public int GetLevelNumber()
