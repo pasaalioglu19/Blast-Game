@@ -22,24 +22,25 @@ public class GridObject : GridEntity
     {
         gridManager = FindFirstObjectByType<GridManager>();
         originalSprite = GetComponent<SpriteRenderer>().sprite;
+        Debug.Log(originalSprite);
     }
 
     void OnMouseDown()
     {
-        //gridManager.CheckBlast(this);
+        gridManager.CheckBlast(this);
     }
 
     public void ResetObjectSprites()
     {
-        //gameObject.GetComponent<SpriteRenderer>().sprite = originalSprite; //Changed sprites for tnt hint reverts to original
-    }
+        gameObject.GetComponent<SpriteRenderer>().sprite = originalSprite;
+    } 
 
     public void SetColor(int index)
     {
         switch (index)
         {
             case 0:
-                objectColor = ObjectColor.Blue; 
+                objectColor = ObjectColor.Blue;
                 break;
             case 1:
                 objectColor = ObjectColor.Green; 
