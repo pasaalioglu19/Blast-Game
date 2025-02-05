@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Net.NetworkInformation;
+using System.Linq;
 using UnityEngine;
-using UnityEngine.UIElements;
+using static GridObject;
 
 public class GridManager : MonoBehaviour
 {
@@ -17,13 +17,8 @@ public class GridManager : MonoBehaviour
     private List<int> colorsSelected = new ();
     private Dictionary<int, List<Vector2Int>> cubeGroups = new Dictionary<int, List<Vector2Int>>();
 
-    private int lastDefaultIconIndex = 6;
-    private int lastFirstIconIndex = 6;
-    private int lastSecondIconIndex = 6;
-
     private bool isGridUpdating = false;
     private bool gameOver = false;
-    private List<GridObject> tntHintObjects = new();
 
     public GridObjectData GridObjectData;
 
@@ -44,10 +39,6 @@ public class GridManager : MonoBehaviour
     {
         this.gridRows = gridRows;
         this.gridColumns = gridColumns;
-
-        this.lastDefaultIconIndex = lastDefaultIconIndex;
-        this.lastFirstIconIndex = lastFirstIconIndex;
-        this.lastSecondIconIndex = lastSecondIconIndex;
 
         gridArray = new GameObject[gridColumns, gridRows];
         SelectColor(colorsCount);
@@ -81,7 +72,113 @@ public class GridManager : MonoBehaviour
     {
         cubeGroups.Clear();
         blastHandler.FindGroups(gridArray, gridColumns, gridRows, cubeGroups);
+        if (cubeGroups.Count == 0) 
+        {
+            StartCoroutine(WaitAndShuffle());
+            return;
+        }
+
         cubeSpriteOrganizer.OrganizeCubeSprites(cubeGroups, gridArray);
+    }
+
+    private IEnumerator WaitAndShuffle()
+    {
+        yield return new WaitForSeconds(1.5f);
+        ShuffleBoard(); 
+    }
+
+    private void ShuffleBoard(int retryCount = 0)
+    {
+        if (retryCount > 10) return;
+
+        int randomX = Random.Range(0, gridColumns);
+        int randomY = Random.Range(0, gridRows);
+        ObjectColor randomXYColor = gridArray[randomX, randomY].GetComponent<GridObject>().GetObjectColor();
+
+        for (int y = 0; y < gridRows; y++)
+        {
+            for (int x = 0; x < gridColumns; x++)
+            {
+                if(x != randomX || y != randomY)
+                {
+                    if(gridArray[x, y].GetComponent<GridObject>().GetObjectColor() == randomXYColor)
+                    {
+                        Vector2Int[] directions = new Vector2Int[]
+{
+                        new(0, 1),  
+                        new(0, -1), 
+                        new(1, 0),  
+                        new(-1, 0)   
+};
+
+                        // Select random direction
+                        Vector2Int randomDirection = directions[Random.Range(0, directions.Length)];
+
+                        int newX = randomX + randomDirection.x;
+                        int newY = randomY + randomDirection.y;
+
+                        if(newX < 0 || newX == gridColumns || newY < 0 || newY == gridRows)
+                        {
+                            newX = randomX - randomDirection.x;
+                            newY = randomY - randomDirection.y;
+                        }
+
+                        ReplaceTwoPiece(x, y, newX, newY);
+                        RandomShuffle(x, y, newX, newY);
+                        CheckHint();
+                        return;
+                    }
+                }
+            }
+        }
+        ShuffleBoard(retryCount + 1);
+    }
+
+    public void RandomShuffle(int swappedFirstX, int swappedFirstY, int swappedSecondX, int swappedSecondY)
+    {
+        List<Vector2Int> positions = new List<Vector2Int>();
+
+        for (int y = 0; y < gridRows; y++)
+        {
+            for (int x = 0; x < gridColumns; x++)
+            {
+                if ((x == swappedFirstX && y == swappedFirstY) || (x == swappedSecondX && y == swappedSecondY))
+                    continue; 
+
+                positions.Add(new Vector2Int(x, y));
+            }
+        }
+
+        int halfCount = positions.Count / 2;
+        for (int i = 0; i < halfCount; i++)
+        {
+            Vector2Int pos1 = positions[i];
+            Vector2Int pos2 = positions[positions.Count - 1 - i];
+
+            ReplaceTwoPiece(pos1.x, pos1.y, pos2.x, pos2.y);
+        }
+    }
+
+
+    private void ReplaceTwoPiece(int x, int y, int newX, int newY)
+    {
+        GameObject movingItem = gridArray[x, y];
+        GameObject movingItem2 = gridArray[newX, newY];
+        gridArray[x, y] = movingItem2;
+        gridArray[newX, newY] = movingItem;
+
+        Vector3 targetPosition1 = new(newX * xyoffSet, newY * xyoffSet, 0);
+        Vector3 targetPosition2 = new(x * xyoffSet, y * xyoffSet, 0);
+
+        animationManager.SwapObject(movingItem, movingItem2, targetPosition1, targetPosition2);
+
+        gridArray[newX, newY].GetComponent<GridEntity>().SetGridX(newX);
+        gridArray[newX, newY].GetComponent<GridEntity>().SetGridY(newY);
+        gridArray[newX, newY].GetComponent<SpriteRenderer>().sortingOrder = newY + 2;
+
+        gridArray[x, y].GetComponent<GridEntity>().SetGridX(x);
+        gridArray[x, y].GetComponent<GridEntity>().SetGridY(y);
+        gridArray[x, y].GetComponent<SpriteRenderer>().sortingOrder = y + 2;
     }
 
     private void SelectColor(int colorsCount)
@@ -136,12 +233,11 @@ public class GridManager : MonoBehaviour
                 }
 
                 group.Value.Clear();
+                BringDefaultObjectSprites();
+                UpdateGridAfterBlast();
                 break;
             }
         }
-
-        BringDefaultObjectSprites();
-        UpdateGridAfterBlast();
     }
 
     private void BringDefaultObjectSprites()
@@ -183,8 +279,6 @@ public class GridManager : MonoBehaviour
     {
         for (int y = 0; y < gridRows; y++)
         {
-            Debug.Log("[x,y] is : [" + x + "," + y + "] and gridArray[x,y] is : " + gridArray[x, y]);
-
             if (gridArray[x, y] == null)
             {
                 for (int aboveY = y + 1; aboveY < gridRows; aboveY++)
