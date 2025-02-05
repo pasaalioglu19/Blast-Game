@@ -1,6 +1,5 @@
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class AnimationManager : MonoBehaviour
 {
@@ -12,5 +11,14 @@ public class AnimationManager : MonoBehaviour
         float dropDuration = distance * oneUnitDropDuration;
         dropObject.transform.DOMove(position, dropDuration)
             .SetEase(Ease.Linear);
+    }
+
+    public void SwapObject(GameObject obj1, GameObject obj2, Vector3 pos1, Vector3 pos2)
+    {
+        // DoTween ile animasyonlu hareket (eþ zamanlý olarak)
+        Sequence swapSequence = DOTween.Sequence();
+
+        swapSequence.Append(obj1.transform.DOMove(pos1, 0.5f).SetEase(Ease.InOutQuad));
+        swapSequence.Join(obj2.transform.DOMove(pos2, 0.5f).SetEase(Ease.InOutQuad));
     }
 }

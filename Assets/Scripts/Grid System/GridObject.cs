@@ -1,6 +1,5 @@
-using System.Drawing;
 using UnityEngine;
-using static GridObject;
+
 
 public class GridObject : GridEntity
 {
@@ -22,7 +21,6 @@ public class GridObject : GridEntity
     {
         gridManager = FindFirstObjectByType<GridManager>();
         originalSprite = GetComponent<SpriteRenderer>().sprite;
-        Debug.Log(originalSprite);
     }
 
     void OnMouseDown()
