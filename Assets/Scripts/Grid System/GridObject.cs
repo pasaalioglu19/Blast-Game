@@ -17,10 +17,13 @@ public class GridObject : GridEntity
     private Sprite originalSprite; 
     private GridManager gridManager;
 
+    private SpriteRenderer spriteRenderer;
+
     void Start()
     {
         gridManager = FindFirstObjectByType<GridManager>();
         originalSprite = GetComponent<SpriteRenderer>().sprite;
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     void OnMouseDown()
@@ -28,9 +31,14 @@ public class GridObject : GridEntity
         gridManager.CheckBlast(this);
     }
 
+    public bool IsDefaultSprite()
+    {
+        return spriteRenderer.sprite == originalSprite;
+    }
+
     public void ResetObjectSprites()
     {
-        gameObject.GetComponent<SpriteRenderer>().sprite = originalSprite;
+        spriteRenderer.sprite = originalSprite;
     } 
 
     public void SetColor(int index)
