@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using static GridObject;
@@ -36,17 +35,30 @@ public class BlastHandler : IBlastHandler
         }
     }
 
-    private void DFS(GameObject[,] gridArray, int gridColumns, int gridRows, int x, int y, bool[,] visited, List<Vector2Int> group, ObjectColor color)
+    private void DFS(GameObject[,] gridArray, int gridColumns, int gridRows, int startX, int startY, bool[,] visited, List<Vector2Int> group, ObjectColor color)
     {
-        if (x < 0 || x >= gridColumns || y < 0 || y >= gridRows || visited[x, y] || gridArray[x, y] == null || gridArray[x, y].GetComponent<GridObject>().GetObjectColor() != color)
-            return;
+        Stack<Vector2Int> stack = new Stack<Vector2Int>();
+        stack.Push(new Vector2Int(startX, startY));
 
-        visited[x, y] = true;
-        group.Add(new Vector2Int(x, y));
+        while (stack.Count > 0)
+        {
+            Vector2Int current = stack.Pop();
+            int x = current.x, y = current.y;
 
-        DFS(gridArray,  gridColumns,  gridRows, x + 1, y, visited, group, color);
-        DFS(gridArray,  gridColumns,  gridRows, x - 1, y, visited, group, color);
-        DFS(gridArray,  gridColumns,  gridRows, x, y + 1, visited, group, color);
-        DFS(gridArray,  gridColumns,  gridRows, x, y - 1, visited, group, color);
+            if (x < 0 || x >= gridColumns || y < 0 || y >= gridRows || visited[x, y] || gridArray[x, y] == null)
+                continue;
+
+            if (gridArray[x, y].GetComponent<GridObject>().GetObjectColor() != color)
+                continue;
+
+            visited[x, y] = true;
+            group.Add(new Vector2Int(x, y));
+
+            stack.Push(new Vector2Int(x + 1, y));
+            stack.Push(new Vector2Int(x - 1, y));
+            stack.Push(new Vector2Int(x, y + 1));
+            stack.Push(new Vector2Int(x, y - 1));
+        }
     }
+
 }

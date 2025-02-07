@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f98fcb2597e597945a2526778e801572, type: 3}
+  m_Name: AnimationObjectData
+  m_EditorClassIdentifier: 
+  particleBlue:
+  - {fileID: -9071847523594660744, guid: 6f61c3ed1ec7711499d8ea1e5766d0b5, type: 3}
+  - {fileID: 7657029665586181353, guid: 6f61c3ed1ec7711499d8ea1e5766d0b5, type: 3}
+  - {fileID: 2270324650435993094, guid: 6f61c3ed1ec7711499d8ea1e5766d0b5, type: 3}
+  - {fileID: 4621878095156879553, guid: 6f61c3ed1ec7711499d8ea1e5766d0b5, type: 3}
+  - {fileID: 511400439588043132, guid: 6f61c3ed1ec7711499d8ea1e5766d0b5, type: 3}
+  particleGreen:
+  - {fileID: -4457352842920875250, guid: ed645a8ca8ff2194ea581090dc4644ad, type: 3}
+  - {fileID: -4675494628969926332, guid: ed645a8ca8ff2194ea581090dc4644ad, type: 3}
+  - {fileID: -7519401100964900973, guid: ed645a8ca8ff2194ea581090dc4644ad, type: 3}
+  - {fileID: 6598116244054770670, guid: ed645a8ca8ff2194ea581090dc4644ad, type: 3}
+  - {fileID: -8557376902694763190, guid: ed645a8ca8ff2194ea581090dc4644ad, type: 3}
+  particlePink:
+  - {fileID: -9081528267123430728, guid: 4d42b20bdc36d5e4fbdd4039bb24d9ba, type: 3}
+  - {fileID: 7772567955260825728, guid: 4d42b20bdc36d5e4fbdd4039bb24d9ba, type: 3}
+  - {fileID: -359152132759201065, guid: 4d42b20bdc36d5e4fbdd4039bb24d9ba, type: 3}
+  - {fileID: 576157270593752131, guid: 4d42b20bdc36d5e4fbdd4039bb24d9ba, type: 3}
+  - {fileID: -3962768926159210811, guid: 4d42b20bdc36d5e4fbdd4039bb24d9ba, type: 3}
+  particlePurple:
+  - {fileID: -575680414028678860, guid: a1503d22734867c45857160ebfc155c1, type: 3}
+  - {fileID: -8913288842987966459, guid: a1503d22734867c45857160ebfc155c1, type: 3}
+  - {fileID: 348568481083098688, guid: a1503d22734867c45857160ebfc155c1, type: 3}
+  - {fileID: -7622660416205992657, guid: a1503d22734867c45857160ebfc155c1, type: 3}
+  - {fileID: -8797851372067440733, guid: a1503d22734867c45857160ebfc155c1, type: 3}
+  particleRed:
+  - {fileID: -131045167281025868, guid: dfee00e7f201b9941b232ba84ae9b158, type: 3}
+  - {fileID: 1055289925795707939, guid: dfee00e7f201b9941b232ba84ae9b158, type: 3}
+  - {fileID: 3835132099825012728, guid: dfee00e7f201b9941b232ba84ae9b158, type: 3}
+  - {fileID: -1907081461146338943, guid: dfee00e7f201b9941b232ba84ae9b158, type: 3}
+  - {fileID: 6377222085473284601, guid: dfee00e7f201b9941b232ba84ae9b158, type: 3}
+  particleYellow:
+  - {fileID: 3000313421200206548, guid: 7a86add433a1bac45b7d2774c49c3b9b, type: 3}
+  - {fileID: -5101794908340246652, guid: 7a86add433a1bac45b7d2774c49c3b9b, type: 3}
+  - {fileID: 8982357989802540006, guid: 7a86add433a1bac45b7d2774c49c3b9b, type: 3}
+  - {fileID: -5772453177871937517, guid: 7a86add433a1bac45b7d2774c49c3b9b, type: 3}
+  - {fileID: -4576557069925463383, guid: 7a86add433a1bac45b7d2774c49c3b9b, type: 3}
+  particleStar: {fileID: 0}

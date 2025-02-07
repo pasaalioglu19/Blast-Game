@@ -5,9 +5,9 @@ using UnityEngine;
 public class CubeSpriteOrganizer
 {
     private GridObjectData gridObjectData;
-    private int lastDefaultIconIndex;
-    private int lastFirstIconIndex;
-    private int lastSecondIconIndex;
+    private readonly int lastDefaultIconIndex;
+    private readonly int lastFirstIconIndex;
+    private readonly int lastSecondIconIndex;
 
     public CubeSpriteOrganizer(GridObjectData gridObjectData, int lastDefaultIconIndex, int lastFirstIconIndex, int lastSecondIconIndex)
     {

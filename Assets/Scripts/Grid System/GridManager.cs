@@ -10,6 +10,8 @@ public class GridManager : MonoBehaviour
     private CubeSpriteOrganizer cubeSpriteOrganizer;
     private AnimationManager animationManager;
 
+
+    private readonly int SHUFFLERETRYCOUNT = 100;
     private int gridRows = 6;
     private int gridColumns = 6;
     private int scannedColumnCount = 0;
@@ -18,13 +20,14 @@ public class GridManager : MonoBehaviour
     private Dictionary<int, List<Vector2Int>> cubeGroups = new Dictionary<int, List<Vector2Int>>();
 
     private bool isGridUpdating = false;
-    private bool gameOver = false;
+    private readonly bool gameOver = false;
 
     public GridObjectData GridObjectData;
 
-    private const int backgroundWidthMultiplier = 102;
-    private const int backgroundHeigthMultiplier = 104;
+    private const int backgroundWidthMultiplier = 108;
+    private const int backgroundHeigthMultiplier = 110;
     private const float xyoffSet = 0.5f;
+    private float objectDropDelay = 0.1f;
     public GameObject GridBackground;
 
     private GameObject[,] gridArray;
@@ -37,6 +40,23 @@ public class GridManager : MonoBehaviour
 
     public void InitializeGridWithLevelData(int gridRows, int gridColumns, int colorsCount, int lastDefaultIconIndex, int lastFirstIconIndex, int lastSecondIconIndex)
     {
+        if(gridRows > 10 || gridColumns > 10 || colorsCount > 6)
+        {
+            string warningMessage = "Invalid input: ";
+
+            if (gridRows > 10)
+                warningMessage += $"gridRows ({gridRows}) exceeds the limit. Maximum allowed is 10. ";
+
+            if (gridColumns > 10)
+                warningMessage += $"gridColumns ({gridColumns}) exceeds the limit. Maximum allowed is 10. ";
+
+            if (colorsCount > 6)
+                warningMessage += $"colorsCount ({colorsCount}) exceeds the limit. Maximum allowed is 6. ";
+
+            Debug.LogWarning(warningMessage);
+            return;
+        }
+
         this.gridRows = gridRows;
         this.gridColumns = gridColumns;
 
@@ -61,7 +81,7 @@ public class GridManager : MonoBehaviour
     }
 
 
-    //When trying to keep the default sprites, I encountered an issue where the sprites changed after the hint due to concurrency, so I added a delay to prevent this.
+    // When trying to keep the default sprites, I encountered an issue where the sprites changed after the hint due to concurrency, so I added a delay to prevent this.
     private IEnumerator HintCoroutine()
     {
         yield return new WaitForSeconds(0.1f);
@@ -79,106 +99,6 @@ public class GridManager : MonoBehaviour
         }
 
         cubeSpriteOrganizer.OrganizeCubeSprites(cubeGroups, gridArray);
-    }
-
-    private IEnumerator WaitAndShuffle()
-    {
-        yield return new WaitForSeconds(1.5f);
-        ShuffleBoard(); 
-    }
-
-    private void ShuffleBoard(int retryCount = 0)
-    {
-        if (retryCount > 10) return;
-
-        int randomX = Random.Range(0, gridColumns);
-        int randomY = Random.Range(0, gridRows);
-        ObjectColor randomXYColor = gridArray[randomX, randomY].GetComponent<GridObject>().GetObjectColor();
-
-        for (int y = 0; y < gridRows; y++)
-        {
-            for (int x = 0; x < gridColumns; x++)
-            {
-                if(x != randomX || y != randomY)
-                {
-                    if(gridArray[x, y].GetComponent<GridObject>().GetObjectColor() == randomXYColor)
-                    {
-                        Vector2Int[] directions = new Vector2Int[]
-{
-                        new(0, 1),  
-                        new(0, -1), 
-                        new(1, 0),  
-                        new(-1, 0)   
-};
-
-                        // Select random direction
-                        Vector2Int randomDirection = directions[Random.Range(0, directions.Length)];
-
-                        int newX = randomX + randomDirection.x;
-                        int newY = randomY + randomDirection.y;
-
-                        if(newX < 0 || newX == gridColumns || newY < 0 || newY == gridRows)
-                        {
-                            newX = randomX - randomDirection.x;
-                            newY = randomY - randomDirection.y;
-                        }
-
-                        ReplaceTwoPiece(x, y, newX, newY);
-                        RandomShuffle(x, y, newX, newY);
-                        CheckHint();
-                        return;
-                    }
-                }
-            }
-        }
-        ShuffleBoard(retryCount + 1);
-    }
-
-    public void RandomShuffle(int swappedFirstX, int swappedFirstY, int swappedSecondX, int swappedSecondY)
-    {
-        List<Vector2Int> positions = new List<Vector2Int>();
-
-        for (int y = 0; y < gridRows; y++)
-        {
-            for (int x = 0; x < gridColumns; x++)
-            {
-                if ((x == swappedFirstX && y == swappedFirstY) || (x == swappedSecondX && y == swappedSecondY))
-                    continue; 
-
-                positions.Add(new Vector2Int(x, y));
-            }
-        }
-
-        int halfCount = positions.Count / 2;
-        for (int i = 0; i < halfCount; i++)
-        {
-            Vector2Int pos1 = positions[i];
-            Vector2Int pos2 = positions[positions.Count - 1 - i];
-
-            ReplaceTwoPiece(pos1.x, pos1.y, pos2.x, pos2.y);
-        }
-    }
-
-
-    private void ReplaceTwoPiece(int x, int y, int newX, int newY)
-    {
-        GameObject movingItem = gridArray[x, y];
-        GameObject movingItem2 = gridArray[newX, newY];
-        gridArray[x, y] = movingItem2;
-        gridArray[newX, newY] = movingItem;
-
-        Vector3 targetPosition1 = new(newX * xyoffSet, newY * xyoffSet, 0);
-        Vector3 targetPosition2 = new(x * xyoffSet, y * xyoffSet, 0);
-
-        animationManager.SwapObject(movingItem, movingItem2, targetPosition1, targetPosition2);
-
-        gridArray[newX, newY].GetComponent<GridEntity>().SetGridX(newX);
-        gridArray[newX, newY].GetComponent<GridEntity>().SetGridY(newY);
-        gridArray[newX, newY].GetComponent<SpriteRenderer>().sortingOrder = newY + 2;
-
-        gridArray[x, y].GetComponent<GridEntity>().SetGridX(x);
-        gridArray[x, y].GetComponent<GridEntity>().SetGridY(y);
-        gridArray[x, y].GetComponent<SpriteRenderer>().sortingOrder = y + 2;
     }
 
     private void SelectColor(int colorsCount)
@@ -206,8 +126,118 @@ public class GridManager : MonoBehaviour
         gridEntity.SetGridY(y);
         gridEntity.SetIsCube(true);
         newEntity.GetComponent<GridObject>().SetColor(selectedColorIndex);
-        newEntity.GetComponent<SpriteRenderer>().sortingOrder = y + 2; //Render order layout was provided according to y coordinates
+        newEntity.GetComponent<SpriteRenderer>().sortingOrder = y + 2; // Render order layout was provided according to y coordinates
         gridArray[x, y] = newEntity;
+    }
+
+    //_________________________________________________________________________________________________________________________
+
+    private IEnumerator WaitAndShuffle()
+    {
+        yield return new WaitForSeconds(1.5f);
+        ShuffleBoard(0);
+    }
+
+    private void ShuffleBoard(int retryCount = 0)
+    {
+        if (retryCount > SHUFFLERETRYCOUNT) return;
+
+        int randomX = Random.Range(0, gridColumns);
+        int randomY = Random.Range(0, gridRows);
+        ObjectColor randomXYColor = gridArray[randomX, randomY].GetComponent<GridObject>().GetObjectColor();
+
+        for (int y = 0; y < gridRows; y++)
+        {
+            for (int x = 0; x < gridColumns; x++)
+            {
+                if (x != randomX || y != randomY)
+                {
+                    if (gridArray[x, y].GetComponent<GridObject>().GetObjectColor() == randomXYColor)
+                    {
+                        Vector2Int[] directions = new Vector2Int[]
+{
+                        new(0, 1),
+                        new(0, -1),
+                        new(1, 0),
+                        new(-1, 0)
+};
+
+                        Vector2Int randomDirection = directions[Random.Range(0, directions.Length)];
+
+                        int newX = randomX + randomDirection.x;
+                        int newY = randomY + randomDirection.y;
+
+                        if (newX < 0 || newX == gridColumns || newY < 0 || newY == gridRows)
+                        {
+                            newX = randomX - randomDirection.x;
+                            newY = randomY - randomDirection.y;
+                        }
+
+                        ReplacePieces(new List<Vector2Int> { new(randomX, randomY), new(x, y), new(newX, newY) });
+                        RandomShuffle(randomX, randomY, x, y, newX, newY);
+                        CheckHint();
+                        return;
+                    }
+                }
+            }
+        }
+        ShuffleBoard(retryCount + 1);
+    }
+
+    // Except for 3 cells in the guaranteed match process, all other cells are shuffled.
+    public void RandomShuffle(int matchedX, int matchedY, int swappedFirstX, int swappedFirstY, int swappedSecondX, int swappedSecondY)
+    {
+        List<Vector2Int> positions = new List<Vector2Int>();
+
+        for (int y = 0; y < gridRows; y++)
+        {
+            for (int x = 0; x < gridColumns; x++)
+            {
+                if ((x == matchedX && y == matchedY) || (x == swappedFirstX && y == swappedFirstY) || (x == swappedSecondX && y == swappedSecondY))
+                    continue;
+
+                positions.Add(new Vector2Int(x, y));
+            }
+        }
+
+        int halfCount = positions.Count / 2;
+        for (int i = 0; i < halfCount; i++)
+        {
+            ReplacePieces(new List<Vector2Int> { positions[i], positions[positions.Count - 1 - i] });
+        }
+    }
+
+    // Manages the swapping operations between three cells that resolve the deadlock issue and other cells.
+    private void ReplacePieces(List<Vector2Int> positions)
+    {
+        int count = positions.Count;
+        if (count < 2) return;
+
+        // Assign Game Objects
+        GameObject[] movingItems = positions.Select(pos => gridArray[pos.x, pos.y]).ToArray();
+
+        for (int i = 0; i < count - 1; i++)
+        {
+            gridArray[positions[i].x, positions[i].y] = movingItems[i + 1];
+        }
+        gridArray[positions[count - 1].x, positions[count - 1].y] = movingItems[0];
+
+        Vector3[] targetPositions = new Vector3[count];
+
+        for (int i = 0; i < count; i++)
+        {
+            targetPositions[i] = new Vector3(positions[(i + (count - 1)) % count].x * xyoffSet, positions[(i + (count - 1)) % count].y * xyoffSet, 0);
+        }
+
+        animationManager.SwapObjects(movingItems, targetPositions);
+
+        foreach (var pos in positions)
+        {
+            var entity = gridArray[pos.x, pos.y].GetComponent<GridEntity>();
+            entity.SetGridX(pos.x);
+            entity.SetGridY(pos.y);
+            gridArray[pos.x, pos.y].GetComponent<SpriteRenderer>().sortingOrder = pos.y + 2;
+        }
     }
 
     //_________________________________________________________________________________________________________________________
@@ -228,16 +258,24 @@ public class GridManager : MonoBehaviour
                     int x = position.x;
                     int y = position.y;
                     GameObject objectInGroup = gridArray[x, y];
-                    Destroy(objectInGroup);
                     gridArray[x, y] = null;
+                    float touchedObjectX = touchedObject.transform.position.x;
+                    float touchedObjectY = touchedObject.transform.position.y;
+                    animationManager.DestroyObject(objectInGroup, objectInGroup.GetComponent<GridObject>().GetObjectColor(), objectInGroup.GetComponent<GridObject>().IsDefaultSprite(), touchedObjectX, touchedObjectY);
                 }
-
                 group.Value.Clear();
-                BringDefaultObjectSprites();
-                UpdateGridAfterBlast();
+                StartCoroutine(WaitForDestroyAnimToFinish(animationManager.GetSpecialDestroyAnimDuration()));
                 break;
             }
         }
+    }
+
+    private IEnumerator WaitForDestroyAnimToFinish(float delay)
+    {
+        isGridUpdating = true;
+        yield return new WaitForSeconds(delay);
+        BringDefaultObjectSprites();
+        UpdateGridAfterBlast();
     }
 
     private void BringDefaultObjectSprites()
@@ -249,7 +287,10 @@ public class GridManager : MonoBehaviour
                 int x = position.x;
                 int y = position.y;
                 GameObject objectInGroup = gridArray[x, y];
-                objectInGroup.GetComponent<GridObject>().ResetObjectSprites();
+                if (objectInGroup)
+                {
+                    objectInGroup.GetComponent<GridObject>().ResetObjectSprites();
+                }
             }
         }
     }
@@ -259,15 +300,14 @@ public class GridManager : MonoBehaviour
     private void InstantiateRandomObject(int x, int y)
     {
         int selectedColorIndex = colorsSelected[Random.Range(0, colorsSelected.Count)];
-        GameObject newObject = Instantiate(GridObjectData.ObjectPrefabs[selectedColorIndex], new Vector3(x * xyoffSet, gridRows * xyoffSet, 0), Quaternion.identity);
+        GameObject newObject = Instantiate(GridObjectData.ObjectPrefabs[selectedColorIndex], new Vector3(x * xyoffSet, (gridRows+1.5f) * xyoffSet, 0), Quaternion.identity);
         SetupGridEntity(newObject, x, y, selectedColorIndex);
-        animationManager.DropObject(newObject, new Vector3(x * xyoffSet, y * xyoffSet, 0), gridRows - y);
+        animationManager.DropObject(newObject, new Vector3(x * xyoffSet, y * xyoffSet, 0), gridRows+1.5f - y);
     }
 
     private void UpdateGridAfterBlast()
     {
         scannedColumnCount = 0; // To calculate the gridUpdating process when it is exactly completed
-        isGridUpdating = true;
         for (int x = 0; x < gridColumns; x++)
         {
             StartCoroutine(UpdateHelper(x));
@@ -285,7 +325,6 @@ public class GridManager : MonoBehaviour
                 {
                     if (gridArray[x, aboveY] == null) continue;
                     MoveGridItem(x, y, aboveY);
-                    yield return new WaitForSeconds(0.1f);
                     break;
                 }
             }
@@ -307,7 +346,13 @@ public class GridManager : MonoBehaviour
         for (int y = lowestY; y < gridRows; y++)
         {
             InstantiateRandomObject(x, y);
-            yield return new WaitForSeconds(0.1f);
+            float maxDropDelayCandidate = (gridRows + 1.5f - y) * animationManager.GetObjectDropDuration();
+            if (maxDropDelayCandidate > objectDropDelay)
+            {
+                objectDropDelay = maxDropDelayCandidate;
+            }
+
+            yield return new WaitForSeconds(0.12f);
         }
         scannedColumnCount++;
     }
@@ -316,9 +361,11 @@ public class GridManager : MonoBehaviour
     {
         while (scannedColumnCount < gridColumns)
         {
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.01f);
         }
+        yield return new WaitForSeconds(objectDropDelay);
         isGridUpdating = false;
+        objectDropDelay = 0.1f;
         CheckHint();
     }
 
@@ -340,7 +387,7 @@ public class GridManager : MonoBehaviour
     {
         GridBackground.SetActive(true);
         RectTransform gridRectTransform = GridBackground.GetComponent<RectTransform>();
-        gridRectTransform.sizeDelta = new Vector2(backgroundWidthMultiplier * gridColumns, backgroundHeigthMultiplier * gridRows);
+        gridRectTransform.sizeDelta = new Vector2((backgroundWidthMultiplier - gridColumns) * gridColumns, (backgroundHeigthMultiplier - gridRows)* gridRows);
     }
     private void AdjustCamera()
     {
