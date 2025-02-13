@@ -35,7 +35,7 @@ public class CubeSpriteOrganizer
         }
     }
 
-    private int GetSpriteIndex(int groupSize)
+    public int GetSpriteIndex(int groupSize)
     {
         if (groupSize > lastSecondIconIndex)
             return 2;

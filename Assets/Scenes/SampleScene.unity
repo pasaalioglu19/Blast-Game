@@ -166,6 +166,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GridObjectData: {fileID: 11400000, guid: 98c39274038a7cb499e25a2fd579eded, type: 2}
+  GridPowerUpsData: {fileID: 11400000, guid: 15bc23e5e8e08df4791095cfd2b7f0b5, type: 2}
   GridBackground: {fileID: 593742190}
 --- !u!114 &25032240
 MonoBehaviour:
@@ -195,6 +196,7 @@ MonoBehaviour:
   objectDropDuration: 0.1
   bounceHeight: 0.1
   bounceDuration: 0.1
+  rocketAnimDuration: 0.6
   particleObstacleScale: 0.12
   particleObstacleLiftDuration: 0.2
   particleObstacleRandomFallDistance: {x: 2, y: 3}
@@ -206,6 +208,7 @@ MonoBehaviour:
   pushDuration: 0.15
   returnDuration: 0.15
   AnimationObjectData: {fileID: 11400000, guid: a4ab7a55b86423346b4bf4c2a3533700, type: 2}
+  RocketHalfSprite: {fileID: -7569059818481574751, guid: 4fbf38d220c642d41a780aabd72a705c, type: 3}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,9 +1,9 @@
 {
        "level_number": 1,
-       "grid_rows": 10,
-       "grid_columns": 10,
-       "colors_count": 6,
-       "last_default_icon_index": 4,
-       "last_first_icon_index": 7,
-       "last_second_icon_index": 9
+       "grid_rows": 6,
+       "grid_columns": 8,
+       "colors_count": 3,
+       "last_default_icon_index": 3,
+       "last_first_icon_index": 5,
+       "last_second_icon_index": 7
 }
