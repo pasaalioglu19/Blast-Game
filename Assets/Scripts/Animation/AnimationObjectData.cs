@@ -9,4 +9,5 @@ public class AnimationObjectData : ScriptableObject
     public Sprite[] particlePurple;
     public Sprite[] particleRed;
     public Sprite[] particleYellow;
+    public Sprite[] particleTnt;
 }

@@ -13,6 +13,9 @@ public class AnimationManager : MonoBehaviour
     [SerializeField] private float bounceHeight = 0.1f;
     [SerializeField] private float bounceDuration = 0.1f;
 
+    [Header("Rocket Animation Settings")]
+    [SerializeField] private float rocketAnimDuration = 0.6f;
+
     [Header("Particle Settings")]
     [SerializeField] private float particleObstacleScale = 0.12f;
     [SerializeField] private float particleObstacleLiftDuration = 0.01f;
@@ -30,9 +33,9 @@ public class AnimationManager : MonoBehaviour
     [SerializeField] private float returnDuration = 0.15f;
 
     public AnimationObjectData AnimationObjectData;
+    public Sprite RocketHalfSprite;
 
-
-    public void DropObject(GameObject dropObject, Vector3 position, float distance)
+    public void DropObjectAnim(GameObject dropObject, Vector3 position, float distance)
     {
         float dropDuration = distance * objectDropDuration;
         float bounceHeight = this.bounceHeight; 
@@ -48,7 +51,7 @@ public class AnimationManager : MonoBehaviour
     }
 
 
-    public void SwapObjects(GameObject[] objects, Vector3[] positions)
+    public void SwapObjectsAnim(GameObject[] objects, Vector3[] positions)
     {
         if (objects.Length != positions.Length) return;
 
@@ -59,7 +62,7 @@ public class AnimationManager : MonoBehaviour
         }
     }
 
-    public void DestroyObject(GameObject blastedObject, ObjectColor color, bool isDefaultIcon, float touchedObjectX, float touchedObjectY)
+    public void DestroyObjectAnim(GameObject blastedObject, ObjectColor color, bool isDefaultIcon, float touchedObjectX, float touchedObjectY)
     {
         if (!isDefaultIcon)
         {
@@ -89,6 +92,33 @@ public class AnimationManager : MonoBehaviour
                 break; 
         }
         return;
+    }
+
+    public void TntBlastAnim(GameObject blastedObject)
+    {
+        DefaultObjectCollapse(blastedObject, AnimationObjectData.particleTnt);
+    }
+
+    public float RocketBlastAnim(float blastedRocketX, float blastedRocketY, bool isGoingUp, int sortingOrder, Sprite rocketSprite)
+    {
+        float moveDistance = isGoingUp ? 6f : 4f;
+        float moveDuration = isGoingUp ? rocketAnimDuration : rocketAnimDuration * 3 / 4;
+        float rotation1 = isGoingUp ? 0f : 90f;
+        float rotation2 = isGoingUp ? 180f : -90f;
+        Vector3 moveDirection = isGoingUp ? Vector3.up : Vector3.left;
+
+        GameObject newRocket1 = RocketFactory.CreateAnimatedRocket("RocketAnim1", blastedRocketX, blastedRocketY, rotation1, sortingOrder, rocketSprite);
+        GameObject newRocket2 = RocketFactory.CreateAnimatedRocket("RocketAnim2", blastedRocketX, blastedRocketY, rotation2, sortingOrder, rocketSprite);
+
+        newRocket1.transform.DOMove(newRocket1.transform.position + moveDirection * moveDistance, moveDuration)
+            .SetEase(Ease.OutQuad)
+            .OnComplete(() => Destroy(newRocket1));
+
+        newRocket2.transform.DOMove(newRocket2.transform.position - moveDirection * moveDistance, moveDuration)
+            .SetEase(Ease.OutQuad)
+            .OnComplete(() => Destroy(newRocket2));
+
+        return moveDuration;
     }
 
     private void SpecialObjectCollapse(GameObject blastedObject, float touchedObjectX, float touchedObjectY)
@@ -123,9 +153,12 @@ public class AnimationManager : MonoBehaviour
             .OnComplete(() =>
             {
                 Destroy(blastedObject);
-                for (int i = 0; i < particleSprites.Length; i++)
+                if (blastedObject.GetComponent<GridEntity>().IsCube())
                 {
-                    CreateParticle(x, y, particleSprites[i], GetOffsetForIndex(i));
+                    for (int i = 0; i < particleSprites.Length; i++)
+                    {
+                        CreateParticle(x, y, particleSprites[i], GetOffsetForIndex(i));
+                    }
                 }
             });
     }
@@ -146,13 +179,7 @@ public class AnimationManager : MonoBehaviour
 
     private void CreateParticle(float x, float y, Sprite particleSprite, Vector2 shatterDirection)
     {
-        GameObject particle = new($"Particle_{particleSprite.name}");
-        particle.transform.position = new Vector3(x, y, 0);
-
-        SpriteRenderer spriteRenderer = particle.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = particleSprite;
-        spriteRenderer.sortingOrder = 11;
-        particle.transform.localScale = new Vector3(particleObstacleScale, particleObstacleScale, 1f);
+        GameObject particle = ParticleFactory.CreateParticleObject(x, y, particleObstacleScale, particleSprite);
 
         float randomFallDistance = Random.Range(particleObstacleRandomFallDistance.x, particleObstacleRandomFallDistance.y);
         float randomDuration = Random.Range(particleObstacleRandomDuration.x, particleObstacleRandomDuration.y);
@@ -169,7 +196,7 @@ public class AnimationManager : MonoBehaviour
 
                 particle.transform.DORotate(new Vector3(0, 0, randomRotation * 2), randomDuration, RotateMode.FastBeyond360).OnComplete(() =>
                 {
-                    spriteRenderer.DOFade(0f, 0.3f);
+                    particle.GetComponent<SpriteRenderer>().DOFade(0f, 0.3f);
                     Destroy(particle, randomDuration + 0.3f);
                 });
             });

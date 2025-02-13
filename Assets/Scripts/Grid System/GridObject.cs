@@ -31,6 +31,16 @@ public class GridObject : GridEntity
         gridManager.CheckBlast(this);
     }
 
+    public void Initialize(int x, int y, int selectedColorIndex)
+    {
+        SetGridX(x);
+        SetGridY(y);
+        SetIsCube(true);
+        SetColor(selectedColorIndex);
+
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        spriteRenderer.sortingOrder = y + 2; 
+    }
     public bool IsDefaultSprite()
     {
         return spriteRenderer.sprite == originalSprite;

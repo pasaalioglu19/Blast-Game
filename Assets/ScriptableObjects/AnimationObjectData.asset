@@ -48,4 +48,5 @@ MonoBehaviour:
   - {fileID: 8982357989802540006, guid: 7a86add433a1bac45b7d2774c49c3b9b, type: 3}
   - {fileID: -5772453177871937517, guid: 7a86add433a1bac45b7d2774c49c3b9b, type: 3}
   - {fileID: -4576557069925463383, guid: 7a86add433a1bac45b7d2774c49c3b9b, type: 3}
-  particleStar: {fileID: 0}
+  particleTnt:
+  - {fileID: -5284336289360315941, guid: 8f7029c58c2f05f46831d9e66c8de1ed, type: 3}
