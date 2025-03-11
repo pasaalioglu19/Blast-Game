@@ -165,9 +165,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a9e150653cbfe34192f544107510a95, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GridObjectData: {fileID: 11400000, guid: 98c39274038a7cb499e25a2fd579eded, type: 2}
-  GridPowerUpsData: {fileID: 11400000, guid: 15bc23e5e8e08df4791095cfd2b7f0b5, type: 2}
-  GridBackground: {fileID: 593742190}
 --- !u!114 &25032240
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -180,6 +177,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b292b557aad7b06488bdca4aad378610, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ObjectData: {fileID: 11400000, guid: 98c39274038a7cb499e25a2fd579eded, type: 2}
+  PowerupsData: {fileID: 11400000, guid: 15bc23e5e8e08df4791095cfd2b7f0b5, type: 2}
+  ObstacleData: {fileID: 11400000, guid: f862a2b9858786e4591285c033ce788a, type: 2}
+  gridBackground: {fileID: 593742190}
 --- !u!114 &25032241
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -438,7 +439,7 @@ GameObject:
   - component: {fileID: 593742193}
   - component: {fileID: 593742192}
   m_Layer: 5
-  m_Name: Background Image
+  m_Name: Grid Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

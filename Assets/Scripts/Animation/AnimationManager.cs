@@ -1,7 +1,6 @@
 using System.Linq;
 using DG.Tweening;
 using UnityEngine;
-using static GridObject;
 
 public class AnimationManager : MonoBehaviour
 {
@@ -34,6 +33,24 @@ public class AnimationManager : MonoBehaviour
 
     public AnimationObjectData AnimationObjectData;
     public Sprite RocketHalfSprite;
+
+    private static AnimationManager _instance;
+    public static AnimationManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindFirstObjectByType<AnimationManager>();
+
+                if (_instance == null)
+                {
+                    Debug.LogError("No AnimationManager found in the scene! Make sure there is an AnimationManager object.");
+                }
+            }
+            return _instance;
+        }
+    }
 
     public void DropObjectAnim(GameObject dropObject, Vector3 position, float distance)
     {

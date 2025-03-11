@@ -4,17 +4,27 @@ using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
+
     private const string levelInfoFilePath = "Assets/Levels/current_level.json";
     private const string levelJsonPathFormat = "Assets/Levels/level_{0:D2}.json";
 
+    public ObjectData ObjectData;
+    public PowerupData PowerupsData;
+    public ObstacleData ObstacleData;
+
+    private ObstacleFactory obstacleFactory;
+
     private GridManager gridManager;
     private LevelData currentLevelData;
+    private GameViewManager gameViewManager;
 
+    [SerializeField] private GameObject gridBackground;
     public LevelInfo CurrentLevelInfo { get; private set; }
 
     void Start()
     {
         gridManager = FindFirstObjectByType<GridManager>();
+
         if (gridManager == null)
         {
             Debug.LogError("GridManager not found!");
@@ -78,8 +88,6 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-
-
     public void RestartLevel()
     {
         UnityEngine.SceneManagement.SceneManager.LoadScene("LevelScene");
@@ -87,7 +95,17 @@ public class LevelManager : MonoBehaviour
 
     private void InitializeLevel()
     {
-        gridManager.InitializeGridWithLevelData(currentLevelData.grid_rows, currentLevelData.grid_columns, currentLevelData.colors_count, currentLevelData.last_default_icon_index, currentLevelData.last_first_icon_index, currentLevelData.last_second_icon_index);
+        obstacleFactory = new ObstacleFactory();
+        obstacleFactory.Initialize(ObstacleData);
+        ObjectFactory.Instance.Initialize(ObjectData);
+        ObjectFactory.Instance.SetColors(currentLevelData.colors);
+        PowerupFactory.Instance.Initialize(PowerupsData);
+
+        GridInitializer gridInitializer = new GridInitializer();
+        gridInitializer.InitializeGrid(currentLevelData.grid, currentLevelData.grid_width, currentLevelData.grid_height, obstacleFactory);
+        gameViewManager = new GameViewManager();
+        gameViewManager.InitializeView(gridBackground);
+        gridManager.InitializeGridWithLevelData(ObjectData);
     }
 
     public int GetLevelNumber()
