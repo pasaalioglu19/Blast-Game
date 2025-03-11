@@ -1,0 +1,1 @@
+public enum PowerupType { Tnt, Rocket, Jrynoth }

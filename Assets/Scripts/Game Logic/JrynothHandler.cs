@@ -3,13 +3,16 @@ using UnityEngine;
 
 public interface IJrynothHandler
 {
-    void HandleJrynothBlast(CubeSpriteOrganizer cubeSpriteOrganizer, AnimationManager animationManager, GridManager gridManager, GameObject[,] gridArray, Dictionary<int, List<Vector2Int>> cubeGroups, int lastDefaultIconIndex, int gridWidth, int gridHeight, float xyoffSet);
+    void HandleJrynothBlast(CubeSpriteOrganizer cubeSpriteOrganizer, AnimationManager animationManager, GridManager gridManager, Dictionary<int, List<Vector2Int>> cubeGroups, int lastDefaultIconIndex);
 }
 
 public class JrynothHandler : IJrynothHandler
 {
-    public void HandleJrynothBlast(CubeSpriteOrganizer cubeSpriteOrganizer, AnimationManager animationManager, GridManager gridManager, GameObject[,] gridArray, Dictionary<int, List<Vector2Int>> cubeGroups, int lastDefaultIconIndex, int gridWidth, int gridHeight, float xyoffSet)
+    public void HandleJrynothBlast(CubeSpriteOrganizer cubeSpriteOrganizer, AnimationManager animationManager, GridManager gridManager, Dictionary<int, List<Vector2Int>> cubeGroups, int lastDefaultIconIndex)
     {
+        var gridArray = GameGrid.Instance.GridArray;
+        float xyoffSet = GameGrid.Instance.GridPositionXYOffset;
+
         foreach (var group in cubeGroups)
         {
             if (group.Value.Count > lastDefaultIconIndex)
@@ -25,10 +28,10 @@ public class JrynothHandler : IJrynothHandler
                     int y = position.y;
                     GameObject objectInGroup = gridArray[x, y];
                     gridArray[x, y] = null;
-                    animationManager.DestroyObjectAnim(objectInGroup, objectInGroup.GetComponent<GridObject>().GetObjectColor(), objectInGroup.GetComponent<GridObject>().IsDefaultSprite(), touchedObjectX, touchedObjectY);
+                    animationManager.DestroyObjectAnim(objectInGroup, objectInGroup.GetComponent<Object>().GetObjectColor(), objectInGroup.GetComponent<Object>().IsDefaultSprite(), touchedObjectX, touchedObjectY);
                 }
 
-                gridManager.GenerateAllPowerUps(touchedIndexX, touchedIndexY, group.Value.Count);
+                gridManager.GenerateAllPowerups(touchedIndexX, touchedIndexY, group.Value.Count);
                 group.Value.Clear();
             }
         }

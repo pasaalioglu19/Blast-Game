@@ -1,24 +1,24 @@
-using static GridObject;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class CubeSpriteOrganizer
 {
-    private GridObjectData gridObjectData;
+    private ObjectData objectData;
     private readonly int lastDefaultIconIndex;
     private readonly int lastFirstIconIndex;
     private readonly int lastSecondIconIndex;
 
-    public CubeSpriteOrganizer(GridObjectData gridObjectData, int lastDefaultIconIndex, int lastFirstIconIndex, int lastSecondIconIndex)
+    public CubeSpriteOrganizer(ObjectData objectData, int lastDefaultIconIndex, int lastFirstIconIndex, int lastSecondIconIndex)
     {
-        this.gridObjectData = gridObjectData;
+        this.objectData = objectData;
         this.lastDefaultIconIndex = lastDefaultIconIndex;
         this.lastFirstIconIndex = lastFirstIconIndex;
         this.lastSecondIconIndex = lastSecondIconIndex;
     }
 
-    public void OrganizeCubeSprites(Dictionary<int, List<Vector2Int>> cubeGroups, GameObject[,] gridArray)
+    public void OrganizeCubeSprites(Dictionary<int, List<Vector2Int>> cubeGroups)
     {
+        var gridArray = GameGrid.Instance.GridArray;
         foreach (var group in cubeGroups)
         {
             int spriteIndex = GetSpriteIndex(group.Value.Count);
@@ -28,7 +28,7 @@ public class CubeSpriteOrganizer
                 if (cube != null)
                 {
                     SpriteRenderer spriteRenderer = cube.GetComponent<SpriteRenderer>();
-                    ObjectColor color = cube.GetComponent<GridObject>().GetObjectColor();
+                    ObjectColor color = cube.GetComponent<Object>().GetObjectColor();
                     ChangeCubeSprites(spriteRenderer, color, spriteIndex);
                 }
             }
@@ -60,13 +60,30 @@ public class CubeSpriteOrganizer
         switch (index)
         {
             case 0:
-                return gridObjectData.ObjectFirstSprites;
+                return objectData.ObjectFirstSprites;
             case 1:
-                return gridObjectData.ObjectSecondSprites;
+                return objectData.ObjectSecondSprites;
             case 2:
-                return gridObjectData.ObjectThirdSprites;
+                return objectData.ObjectThirdSprites;
             default:
                 return null;
+        }
+    }
+
+    public void BringDefaultObjectSprites(Dictionary<int, List<Vector2Int>> cubeGroups)
+    {
+        foreach (var group in cubeGroups)
+        {
+            foreach (var position in group.Value)
+            {
+                int x = position.x;
+                int y = position.y;
+                GameObject objectInGroup = GameGrid.Instance.GridArray[x, y];
+                if (objectInGroup)
+                {
+                    objectInGroup.GetComponent<Object>().ResetObjectSprites();
+                }
+            }
         }
     }
 }

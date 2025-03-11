@@ -1,32 +1,34 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static GridObject;
-using static GridPowerUps;
-
+using static UnityEngine.Rendering.DebugUI;
 public interface IBlastHandler
 {
-    void FindGroups(GameObject[,] gridArray, int gridColumns, int gridRows, Dictionary<int, List<Vector2Int>> cubeGroups, int leastGroupCount);
-    IEnumerator PowerUpSequenceController(GridPowerUps touchedObject, GameObject[,] gridArray, int gridWidth, int gridHeight, AnimationManager animationManager, float tntSequenceDelay);
+    void FindGroups(Dictionary<int, List<Vector2Int>> cubeGroups, int leastGroupCount);
+    IEnumerator PowerupSequenceController(Powerups touchedObject, AnimationManager animationManager, float tntSequenceDelay);
 }
 
 public class BlastHandler : IBlastHandler
 {
-    public void FindGroups(GameObject[,] gridArray, int gridColumns, int gridRows, Dictionary<int, List<Vector2Int>> cubeGroups, int leastGroupCount)
+    public void FindGroups(Dictionary<int, List<Vector2Int>> cubeGroups, int leastGroupCount)
     {
-        bool[,] visited = new bool[gridColumns, gridRows];
+        var gridArray = GameGrid.Instance.GridArray;
+        int gridWidth = GameGrid.Instance.GridWidth;
+        int gridHeight = GameGrid.Instance.GridHeight;
+
+        bool[,] visited = new bool[gridWidth, gridHeight];
 
         int groupId = 0;
 
-        for (int x = 0; x < gridColumns; x++)
+        for (int x = 0; x < gridWidth; x++)
         {
-            for (int y = 0; y < gridRows; y++)
+            for (int y = 0; y < gridHeight; y++)
             {
                 if (!visited[x, y] && gridArray[x, y] != null && gridArray[x, y].GetComponent<GridEntity>().IsCube())
                 {
                     List<Vector2Int> group = new List<Vector2Int>();
-                    ObjectColor color = gridArray[x, y].GetComponent<GridObject>().GetObjectColor();
-                    DFS(gridArray, gridColumns, gridRows, x, y, visited, group, color);
+                    ObjectColor color = gridArray[x, y].GetComponent<Object>().GetObjectColor();
+                    DFS(gridArray, gridWidth, gridHeight, x, y, visited, group, color);
 
                     if (group.Count >= leastGroupCount) 
                     {
@@ -54,7 +56,7 @@ public class BlastHandler : IBlastHandler
             if(!gridArray[x, y].GetComponent<GridEntity>().IsCube())
                 continue;
 
-            if (gridArray[x, y].GetComponent<GridObject>().GetObjectColor() != color)
+            if (gridArray[x, y].GetComponent<Object>().GetObjectColor() != color)
                 continue;
 
             visited[x, y] = true;
@@ -71,77 +73,74 @@ public class BlastHandler : IBlastHandler
 
 
     // Manages the situation where TNTs explode each other
-    public IEnumerator PowerUpSequenceController(GridPowerUps touchedObject, GameObject[,] gridArray, int gridWidth, int gridHeight, AnimationManager animationManager, float powerUpSequenceDelay)
+    public IEnumerator PowerupSequenceController(Powerups touchedObject, AnimationManager animationManager, float powerupSequenceDelay)
     {
-        List<GridEntity> matchedObjects;
-        Queue<GridPowerUps> matchedPowerUps = new(); 
+        var gridArray = GameGrid.Instance.GridArray;
+        int gridWidth = GameGrid.Instance.GridWidth;
+        int gridHeight = GameGrid.Instance.GridHeight;
+        List<Powerups> matchedPowerups2;
+        Queue<Powerups> matchedPowerups = new();
 
-        matchedPowerUps.Enqueue(touchedObject); 
+        matchedPowerups.Enqueue(touchedObject); 
 
         bool[,] visitedPowerups = new bool[gridWidth, gridHeight];
         visitedPowerups[touchedObject.GetGridX(), touchedObject.GetGridY()] = true;
 
         do
         {
-            Debug.Log(matchedPowerUps.Count);
-            var currentPowerUp = matchedPowerUps.Dequeue();
-            int currentX = currentPowerUp.GetGridX();
-            int currentY = currentPowerUp.GetGridY();
+            var currentPowerup = matchedPowerups.Dequeue();
+            int currentX = currentPowerup.GetGridX();
+            int currentY = currentPowerup.GetGridY();
 
-            PowerUpType currentPowerUpType = currentPowerUp.GetPowerUpType();
+            PowerupType currentPowerupType = currentPowerup.GetPowerupType();
 
-            if (currentPowerUpType == PowerUpType.Tnt)
+            if (currentPowerupType == PowerupType.Tnt)
             {
                 int isBigTnt = CheckAdjacentTnt(currentX, currentY, visitedPowerups, gridArray, gridWidth, gridHeight);
-                matchedObjects = TntBlast(gridArray, gridWidth, gridHeight, currentX, currentY, isBigTnt);
+                matchedPowerups2 = TntBlast(gridArray, gridWidth, gridHeight, currentX, currentY, isBigTnt);
                 //animationManager.TntAnimation(currentTnt.transform.position, isBigTnt);
             }
-            else if (currentPowerUpType == PowerUpType.Rocket)
+            else if (currentPowerupType == PowerupType.Rocket)
             {
-                Rocket rocketComponent = currentPowerUp.GetComponent<Rocket>();
-                matchedObjects = RocketBlast(gridArray, gridWidth, gridHeight, currentX, currentY, rocketComponent.IsHorizontal());
-                animationManager.RocketBlastAnim(currentPowerUp.transform.position.x, currentPowerUp.transform.position.y, !rocketComponent.IsHorizontal(), gridHeight + 2, rocketComponent.GetRocketHalfSprite());
+                Rocket rocketComponent = currentPowerup.GetComponent<Rocket>();
+                matchedPowerups2 = RocketBlast(gridArray, gridWidth, gridHeight, currentX, currentY, rocketComponent.IsHorizontal());
+                animationManager.RocketBlastAnim(currentPowerup.transform.position.x, currentPowerup.transform.position.y, !rocketComponent.IsHorizontal(), gridHeight + 2, rocketComponent.GetRocketHalfSprite());
             }
             else
             {
-                Debug.Log(currentPowerUpType);
                 continue;
             }
 
-            for (int i = 0; i < matchedObjects.Count; i++)
+            for (int i = 0; i < matchedPowerups2.Count; i++)
             {
-                if (matchedObjects[i].IsCube())
-                {
-                    break;
-                }
-                GridPowerUps powerUp = matchedObjects[i].GetComponent<GridPowerUps>();
-                PowerUpType powerUpType = powerUp.GetPowerUpType();
-                int powerUpX = powerUp.GetGridX();
-                int powerUpY = powerUp.GetGridY();
+                Powerups powerup = matchedPowerups2[i].GetComponent<Powerups>();
+                PowerupType powerupType = powerup.GetPowerupType();
+                int powerupX = powerup.GetGridX();
+                int powerupY = powerup.GetGridY();
 
-                if (!visitedPowerups[powerUpX, powerUpY])
+                if (!visitedPowerups[powerupX, powerupY])
                 {
-                    matchedPowerUps.Enqueue(powerUp);
-                    visitedPowerups[powerUpX, powerUpY] = true;
+                    matchedPowerups.Enqueue(powerup);
+                    visitedPowerups[powerupX, powerupY] = true;
+                }
+                else
+                {
+                    animationManager.TntBlastAnim(matchedPowerups2[i].gameObject);
+                    gridArray[powerupX, powerupY] = null;
                 }
             }
 
-            foreach (var powerup in matchedPowerUps)
-            {
-                matchedObjects.Remove(powerup);
-            }
+            animationManager.TntBlastAnim(currentPowerup.gameObject);
+            gridArray[currentX, currentY] = null;
 
-            matchedObjects.Add(currentPowerUp);
+            yield return new WaitForSeconds(powerupSequenceDelay);
 
-            DestroyMatchedCube(matchedObjects, gridArray, animationManager);
-            yield return new WaitForSeconds(powerUpSequenceDelay);
-
-        } while (matchedPowerUps.Count > 0);
+        } while (matchedPowerups.Count > 0);
     }
 
-    private List<GridEntity> TntBlast(GameObject[,] gridArray, int gridWidth, int gridHeight, int x, int y, int isBigTnt)
+    private List<Powerups> TntBlast(GameObject[,] gridArray, int gridWidth, int gridHeight, int x, int y, int isBigTnt)
     {
-        List<GridEntity> matchedObjects = new();
+        List<Powerups> matchedPowerups = new();
         int xyStart = 2 + isBigTnt;
         int xyEnd = 3 + isBigTnt;
 
@@ -153,25 +152,33 @@ public class BlastHandler : IBlastHandler
             }
             for (int y_value = y - xyStart; y_value < y + xyEnd; y_value++)
             {
-                if (y_value < 0 || y_value >= gridHeight || gridArray[x_value, y_value] == null)
+                if (y_value < 0 || y_value >= gridHeight || gridArray[x_value, y_value] == null || (x_value == x && y_value == y))
                 {
                     continue;
                 }
 
                 if (gridArray[x_value, y_value].GetComponent<GridEntity>().IsCube())
                 {
-                    matchedObjects.Add(gridArray[x_value, y_value].GetComponent<GridEntity>());
+                    AnimationManager.Instance.DestroyObjectAnim(gridArray[x_value, y_value], gridArray[x_value, y_value].GetComponent<GridEntity>().GetComponent<Object>().GetObjectColor(), true, 0, 0);
+                    gridArray[x_value, y_value] = null;
                 }
-                else if (gridArray[x_value, y_value].GetComponent<GridPowerUps>() && (x_value != x || y_value != y))
+                else if (gridArray[x_value, y_value].GetComponent<Powerups>())
                 {
-                    if(gridArray[x_value, y_value].GetComponent<GridPowerUps>().GetPowerUpType() != PowerUpType.Jrynoth)
+                    if(gridArray[x_value, y_value].GetComponent<Powerups>().GetPowerupType() != PowerupType.Jrynoth)
                     {
-                        matchedObjects.Insert(0, gridArray[x_value, y_value].GetComponent<GridEntity>()); //PowerUps are kept specially by adding them to the begin of the list to be detonated later.
+                        matchedPowerups.Insert(0, gridArray[x_value, y_value].GetComponent<Powerups>()); //Powerups are kept specially by adding them to the begin of the list to be detonated later.
+                    }
+                }
+                else if (gridArray[x_value, y_value].GetComponent<Obstacle>())
+                {
+                    if (gridArray[x_value, y_value].TryGetComponent<Obstacle>(out var obstacle) )
+                    {
+                        obstacle.TakeHit(ExplosionType.TntBlast);
                     }
                 }
             }
         }
-        return matchedObjects;
+        return matchedPowerups;
     }
 
     private int CheckAdjacentTnt(int x, int y, bool[,] visitedTnt, GameObject[,] gridArray, int gridWidth, int gridHeight)
@@ -189,9 +196,9 @@ public class BlastHandler : IBlastHandler
                 continue;
             }
 
-            GridPowerUps powerUpComponent = gridArray[newX, newY].GetComponent<GridPowerUps>();
+            Powerups powerupComponent = gridArray[newX, newY].GetComponent<Powerups>();
 
-            if (powerUpComponent && powerUpComponent.GetPowerUpType() == PowerUpType.Tnt)
+            if (powerupComponent && powerupComponent.GetPowerupType() == PowerupType.Tnt)
             {
                 visitedTnt[newX, newY] = true;
                 return 1;
@@ -200,9 +207,9 @@ public class BlastHandler : IBlastHandler
         return 0;
     }
 
-    private List<GridEntity> RocketBlast(GameObject[,] gridArray, int gridWidth, int gridHeight, int rocketX, int rocketY, bool isHorizontal)
+    private List<Powerups> RocketBlast(GameObject[,] gridArray, int gridWidth, int gridHeight, int rocketX, int rocketY, bool isHorizontal)
     {
-        List<GridEntity> matchedObjects = new();
+        List<Powerups> matchedPowerups = new();
 
         if (isHorizontal)
         {
@@ -214,13 +221,21 @@ public class BlastHandler : IBlastHandler
                 }
                 if (gridArray[x, rocketY].GetComponent<GridEntity>().IsCube())
                 {
-                    matchedObjects.Add(gridArray[x, rocketY].GetComponent<GridEntity>());
+                    AnimationManager.Instance.DestroyObjectAnim(gridArray[x, rocketY], gridArray[x, rocketY].GetComponent<Object>().GetObjectColor(), true, 0, 0);
+                    gridArray[x, rocketY] = null;
                 }
-                else if (gridArray[x, rocketY].GetComponent<GridPowerUps>() && (x != rocketX))
+                else if (gridArray[x, rocketY].GetComponent<Powerups>() && (x != rocketX))
                 {
-                    if (gridArray[x, rocketY].GetComponent<GridPowerUps>().GetPowerUpType() != PowerUpType.Jrynoth)
+                    if (gridArray[x, rocketY].GetComponent<Powerups>().GetPowerupType() != PowerupType.Jrynoth)
                     {
-                        matchedObjects.Insert(0, gridArray[x, rocketY].GetComponent<GridEntity>()); //PowerUps are kept specially by adding them to the begin of the list to be detonated later.
+                        matchedPowerups.Insert(0, gridArray[x, rocketY].GetComponent<Powerups>()); //Powerups are kept specially by adding them to the begin of the list to be detonated later.
+                    }
+                }
+                else if (gridArray[x, rocketY].GetComponent<Obstacle>())
+                {
+                    if (gridArray[x, rocketY].TryGetComponent<Obstacle>(out var obstacle))
+                    {
+                        obstacle.TakeHit(ExplosionType.RocketBlast);
                     }
                 }
             }
@@ -235,34 +250,25 @@ public class BlastHandler : IBlastHandler
                 }
                 if (gridArray[rocketX, y].GetComponent<GridEntity>().IsCube())
                 {
-                    matchedObjects.Add(gridArray[rocketX, y].GetComponent<GridEntity>());
+                    AnimationManager.Instance.DestroyObjectAnim(gridArray[rocketX, y], gridArray[rocketX, y].GetComponent<Object>().GetObjectColor(), true, 0, 0);
+                    gridArray[rocketX, y] = null;
                 }
-                else if (gridArray[rocketX, y].GetComponent<GridPowerUps>() && (y != rocketY))
+                else if (gridArray[rocketX, y].GetComponent<Powerups>() && (y != rocketY))
                 {
-                    if (gridArray[rocketX, y].GetComponent<GridPowerUps>().GetPowerUpType() != PowerUpType.Jrynoth)
+                    if (gridArray[rocketX, y].GetComponent<Powerups>().GetPowerupType() != PowerupType.Jrynoth)
                     {
-                        matchedObjects.Insert(0, gridArray[rocketX, y].GetComponent<GridEntity>()); //PowerUps are kept specially by adding them to the begin of the list to be detonated later.
+                        matchedPowerups.Insert(0, gridArray[rocketX, y].GetComponent<Powerups>()); //Powerups are kept specially by adding them to the begin of the list to be detonated later.
+                    }
+                }
+                else if (gridArray[rocketX, y].GetComponent<Obstacle>())
+                {
+                    if (gridArray[rocketX, y].TryGetComponent<Obstacle>(out var obstacle))
+                    {
+                        obstacle.TakeHit(ExplosionType.RocketBlast);
                     }
                 }
             }
         }
-        return matchedObjects;
-    }
-
-    private void DestroyMatchedCube(List<GridEntity> matchedObjects, GameObject[,] gridArray, AnimationManager animationManager)
-    {
-        foreach (var gridObj in matchedObjects)
-        {
-            if (gridObj != null)
-            {
-                gridArray[gridObj.GetGridX(), gridObj.GetGridY()] = null;
-                if (gridObj.IsCube())
-                {
-                    animationManager.DestroyObjectAnim(gridObj.gameObject, gridObj.GetComponent<GridObject>().GetObjectColor(), true, 0, 0);
-                    continue;
-                }
-                animationManager.TntBlastAnim(gridObj.gameObject);
-            }
-        }
+        return matchedPowerups;
     }
 }

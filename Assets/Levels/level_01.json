@@ -1,9 +1,18 @@
 {
        "level_number": 1,
-       "grid_rows": 6,
-       "grid_columns": 8,
-       "colors_count": 3,
-       "last_default_icon_index": 3,
-       "last_first_icon_index": 5,
-       "last_second_icon_index": 7
+       "grid_width": 5,
+       "grid_height": 8,
+       "move_count": 10,
+       "grid" : [
+              "r", "r", "r", "r", "r", 
+              "ro", "s", "s","s", "ro", 
+              "y", "y", "y", "y", "y", 
+              "bo", "bo", "g", "bo", "bo", 
+              "bo", "g", "t", "g", "bo", 
+              "bo", "bo", "g", "bo", "bo", 
+              "ro", "b", "b", "b", "ro", 
+              "v", "v", "v", "v", "v"
+          ],
+          
+       "colors" : ["r", "g", "b", "y", "pi"]
 }

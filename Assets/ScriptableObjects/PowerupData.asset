@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf5866179f580094581d525ed4c2e482, type: 3}
+  m_Name: PowerupData
+  m_EditorClassIdentifier: 
+  PowerupsPrefabs:
+  - {fileID: 6673500410834462643, guid: 1b55fd36376d0274899eb2aece2bf57f, type: 3}
+  - {fileID: 3949164042458174583, guid: 4c0312440778fef45b8ef2761440c785, type: 3}
+  - {fileID: 5096739489554801100, guid: c8d851c02c32ff24da4adebcebd03fd9, type: 3}
