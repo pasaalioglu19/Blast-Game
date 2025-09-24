@@ -13,6 +13,7 @@ public class LevelManager : MonoBehaviour
     public ObstacleData ObstacleData;
 
     private ObstacleFactory obstacleFactory;
+    private ShadowGridService shadowGridService;
 
     private GridManager gridManager;
     private LevelData currentLevelData;
@@ -105,7 +106,9 @@ public class LevelManager : MonoBehaviour
         gridInitializer.InitializeGrid(currentLevelData.grid, currentLevelData.grid_width, currentLevelData.grid_height, obstacleFactory);
         gameViewManager = new GameViewManager();
         gameViewManager.InitializeView(gridBackground);
-        gridManager.InitializeGridWithLevelData(ObjectData);
+
+        shadowGridService = new ShadowGridService();
+        gridManager.InitializeGridWithLevelData(ObjectData, shadowGridService);
     }
 
     public int GetLevelNumber()

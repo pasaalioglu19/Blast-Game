@@ -12,7 +12,7 @@ public class ShuffleBoard
     public IEnumerator WaitAndShuffle()
     {
         gridWidth = GameGrid.Instance.GridWidth;
-        gridHeight = GameGrid.Instance.GridHeight;
+        gridHeight = GameGrid.Instance.GridHeight; 
         gridPositionXYOffset = GameGrid.Instance.GridPositionXYOffset;
         yield return new WaitForSeconds(1.5f);
         ResolveDeadlockAndShuffle(0);
@@ -20,11 +20,21 @@ public class ShuffleBoard
 
     private void ResolveDeadlockAndShuffle(int retryCount = 0)
     {
+        ObjectColor randomXYColor = ObjectColor.Blue;
+
         if (retryCount > SHUFFLERETRYCOUNT) return;
 
         int randomX = Random.Range(0, gridWidth);
         int randomY = Random.Range(0, gridHeight);
-        ObjectColor randomXYColor = GameGrid.Instance.GridArray[randomX, randomY].GetComponent<Object>().GetObjectColor();
+
+        var entity = GameGrid.Instance.GridArray[randomX, randomY];
+        if (entity == null || !entity.TryGetComponent(out Object objectComponent))
+        {
+            ResolveDeadlockAndShuffle(retryCount + 1);
+            return;
+        }
+
+        randomXYColor = objectComponent.GetObjectColor();
 
         for (int y = 0; y < gridHeight; y++)
         {
@@ -32,30 +42,44 @@ public class ShuffleBoard
             {
                 if (x != randomX || y != randomY)
                 {
-                    if (GameGrid.Instance.GridArray[x, y].GetComponent<Object>().GetObjectColor() == randomXYColor)
+                    entity = GameGrid.Instance.GridArray[x, y];
+                    if (!entity)
+                    {
+                        continue;
+                    }
+                    var obj = entity.GetComponent<Object>();
+                    if (obj != null && obj.GetObjectColor() == randomXYColor)
                     {
                         Vector2Int[] directions = new Vector2Int[]
-{
-                        new(0, 1),
-                        new(0, -1),
-                        new(1, 0),
-                        new(-1, 0)
-};
-
-                        Vector2Int randomDirection = directions[Random.Range(0, directions.Length)];
-
-                        int newX = randomX + randomDirection.x;
-                        int newY = randomY + randomDirection.y;
-
-                        if (newX < 0 || newX == gridWidth || newY < 0 || newY == gridHeight)
                         {
-                            newX = randomX - randomDirection.x;
-                            newY = randomY - randomDirection.y;
-                        }
+                            new(0, 1),
+                            new(0, -1),
+                            new(1, 0),
+                            new(-1, 0)
+                        };
 
-                        ReplacePieces(new List<Vector2Int> { new(randomX, randomY), new(x, y), new(newX, newY) });
-                        RandomShuffle(randomX, randomY, x, y, newX, newY);
-                        return;
+                        // Randomize directions
+                        directions = directions.OrderBy(_ => Random.value).ToArray();
+
+                        foreach (var dir in directions)
+                        {
+                            int newX = randomX + dir.x;
+                            int newY = randomY + dir.y;
+
+                            if (newX < 0 || newX >= gridWidth || newY < 0 || newY >= gridHeight)
+                                continue;
+
+                            var neighbour = GameGrid.Instance.GridArray[newX, newY];
+                            if (neighbour == null)
+                                continue;
+
+                            if (neighbour.GetComponent<Object>() == null && neighbour.GetComponent<Powerups>() == null)
+                                continue;
+
+                            ReplacePieces(new List<Vector2Int> { new(randomX, randomY), new(x, y), new(newX, newY) });
+                            RandomShuffle(randomX, randomY, x, y, newX, newY);
+                            return;
+                        }
                     }
                 }
             }
@@ -72,6 +96,11 @@ public class ShuffleBoard
         {
             for (int x = 0; x < gridWidth; x++)
             {
+                var entity = GameGrid.Instance.GridArray[x, y];
+
+                if(entity == null || (!entity.GetComponent<Object>() && !entity.GetComponent<Powerups>()) )
+                    continue;
+
                 if ((x == matchedX && y == matchedY) || (x == swappedFirstX && y == swappedFirstY) || (x == swappedSecondX && y == swappedSecondY))
                     continue;
 

@@ -34,6 +34,7 @@ public class AnimationManager : MonoBehaviour
     public AnimationObjectData AnimationObjectData;
     public Sprite RocketHalfSprite;
 
+    private GridManager gridManager;
     private static AnimationManager _instance;
     public static AnimationManager Instance
     {
@@ -50,6 +51,14 @@ public class AnimationManager : MonoBehaviour
             }
             return _instance;
         }
+    }
+
+    private void Start()
+    {
+        gridManager = FindFirstObjectByType<GridManager>();
+        if (gridManager == null)
+            Debug.LogError("GridManager not found!");
+
     }
 
     public void DropObjectAnim(GameObject dropObject, Vector3 position, float distance)
@@ -83,6 +92,9 @@ public class AnimationManager : MonoBehaviour
     {
         if (!isDefaultIcon)
         {
+            //When an object is about to be destroyed, if it belongs to a group, the sprite of every object in that group is reset.
+            gridManager.Denemelik(blastedObject.GetComponent<GridEntity>().GetGridX(), blastedObject.GetComponent<GridEntity>().GetGridY());
+
             SpecialObjectCollapse(blastedObject, touchedObjectX, touchedObjectY);
             return;
         }
@@ -116,13 +128,15 @@ public class AnimationManager : MonoBehaviour
         DefaultObjectCollapse(blastedObject, AnimationObjectData.particleTnt);
     }
 
-    public float RocketBlastAnim(float blastedRocketX, float blastedRocketY, bool isGoingUp, int sortingOrder, Sprite rocketSprite)
+    public float RocketBlastAnim(GameObject blastedObject, float blastedRocketX, float blastedRocketY, bool isGoingUp, int sortingOrder, Sprite rocketSprite)
     {
         float moveDistance = isGoingUp ? 6f : 4f;
         float moveDuration = isGoingUp ? rocketAnimDuration : rocketAnimDuration * 3 / 4;
         float rotation1 = isGoingUp ? 0f : 90f;
         float rotation2 = isGoingUp ? 180f : -90f;
         Vector3 moveDirection = isGoingUp ? Vector3.up : Vector3.left;
+
+        Destroy(blastedObject);
 
         GameObject newRocket1 = RocketFactory.CreateAnimatedRocket("RocketAnim1", blastedRocketX, blastedRocketY, rotation1, sortingOrder, rocketSprite);
         GameObject newRocket2 = RocketFactory.CreateAnimatedRocket("RocketAnim2", blastedRocketX, blastedRocketY, rotation2, sortingOrder, rocketSprite);
