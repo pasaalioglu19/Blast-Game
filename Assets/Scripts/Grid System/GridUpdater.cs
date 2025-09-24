@@ -2,10 +2,18 @@ using System.Collections;
 using UnityEngine;
 
 public class GridUpdater {
+    private GridManager gridManager;
+    private ShadowGridService shadowGridService;
     private int scannedColumnCount = 0;
     private float objectDropDelay;
     private float objectDropDuration = 0;
-    public void UpdateGridAfterBlast(GridManager gridManager)
+
+    public GridUpdater(GridManager gridManager, ShadowGridService shadowGridService)
+    {
+        this.gridManager = gridManager;
+        this.shadowGridService = shadowGridService;
+    }
+    public void UpdateGridAfterBlast()
     {
         objectDropDelay = 0.1f;
         objectDropDuration  = AnimationManager.Instance.GetObjectDropDuration();
@@ -14,7 +22,7 @@ public class GridUpdater {
         {
             CoroutineHelper.Instance.StartRoutine(UpdateHelper(x));
         }
-        CoroutineHelper.Instance.StartRoutine(WaitForGridUpdateToFinish(gridManager));
+        CoroutineHelper.Instance.StartRoutine(WaitForGridUpdateToFinish());
     }
 
     private IEnumerator UpdateHelper(int x)
@@ -34,6 +42,12 @@ public class GridUpdater {
                     {
                         break; 
                     }
+
+                    if (aboveItem.TryGetComponent(out Object objectComponent)){
+                        gridManager.Denemelik(x, aboveY);
+                    }
+
+                    yield return new WaitForSeconds(0.01f);
 
                     MoveGridItem(x, y, aboveY);
                     break;
@@ -68,7 +82,7 @@ public class GridUpdater {
         scannedColumnCount++;
     }
 
-    private IEnumerator WaitForGridUpdateToFinish(GridManager gridManager)
+    private IEnumerator WaitForGridUpdateToFinish()
     {
         while (scannedColumnCount < GameGrid.Instance.GridWidth-1)
         {

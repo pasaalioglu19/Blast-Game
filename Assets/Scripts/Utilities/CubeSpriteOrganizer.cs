@@ -78,10 +78,10 @@ public class CubeSpriteOrganizer
             {
                 int x = position.x;
                 int y = position.y;
-                GameObject objectInGroup = GameGrid.Instance.GridArray[x, y];
-                if (objectInGroup)
+
+                if (GameGrid.Instance.GridArray[x, y]?.TryGetComponent(out Object objectComponent) == true)
                 {
-                    objectInGroup.GetComponent<Object>().ResetObjectSprites();
+                    objectComponent.ResetObjectSprites();
                 }
             }
         }

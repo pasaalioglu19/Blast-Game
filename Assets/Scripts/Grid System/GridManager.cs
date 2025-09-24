@@ -9,6 +9,7 @@ public class GridManager : MonoBehaviour
 
     private CubeSpriteOrganizer cubeSpriteOrganizer;
     private AnimationManager animationManager;
+    private ShadowGridService shadowGridService;
     private GridUpdater gridUpdater;
 
 
@@ -30,11 +31,11 @@ public class GridManager : MonoBehaviour
         blastHandler = new BlastHandler();
         jrynothHandler = new JrynothHandler();
         shuffleBoard = new ShuffleBoard();
-        gridUpdater = new GridUpdater();
     }
 
-    public void InitializeGridWithLevelData(ObjectData objectData)
+    public void InitializeGridWithLevelData(ObjectData objectData, ShadowGridService shadowGridService)
     {
+        gridUpdater = new GridUpdater(this, shadowGridService);
         cubeSpriteOrganizer = new CubeSpriteOrganizer(objectData, lastDefaultIconIndex, lastFirstIconIndex, lastSecondIconIndex);
         StartCoroutine(HintCoroutine());
     }
@@ -123,6 +124,26 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    public void Denemelik(int touchedIndexX, int touchedIndexY)
+    {
+        foreach (var group in cubeGroups)
+        {
+            if (group.Value.Contains(new Vector2Int(touchedIndexX, touchedIndexY)))
+            {
+                foreach (var position in group.Value)
+                {
+                    int x = position.x;
+                    int y = position.y;
+
+                    if (GameGrid.Instance.GridArray[x, y]?.TryGetComponent(out Object objectComponent) == true)
+                    {
+                        objectComponent.ResetObjectSprites();
+                    }
+                }
+            }
+        }
+    }
+
     private void CheckAndDamageAdjacentObstacles(Vector2Int position, ExplosionType explosionType)
     {
         Vector2Int[] directions = { new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };
@@ -150,7 +171,7 @@ public class GridManager : MonoBehaviour
     private IEnumerator WaitForDestroyAnimToFinish(float delay, int touchedIndexX, int touchedIndexY, int groupCount)
     {
         isGridUpdating = true;
-        yield return new WaitForSeconds(delay);
+        yield return new WaitForSeconds(delay*1.01f);
 
         if (groupCount != 0)
         {
@@ -160,8 +181,8 @@ public class GridManager : MonoBehaviour
                 PowerupFactory.Instance.CreatePowerup(spriteIndex, touchedIndexX, touchedIndexY);
             }
         }
-        cubeSpriteOrganizer.BringDefaultObjectSprites(cubeGroups);
-        gridUpdater.UpdateGridAfterBlast(this);
+
+        gridUpdater.UpdateGridAfterBlast();
     }
 
     public void GenerateAllPowerups(int touchedIndexX, int touchedIndexY, int groupCount)
@@ -177,8 +198,8 @@ public class GridManager : MonoBehaviour
     {
         isGridUpdating = true;
         yield return StartCoroutine(blastHandler.PowerupSequenceController(touchedPowerup, animationManager, powerupSequenceDelay));
-        cubeSpriteOrganizer.BringDefaultObjectSprites(cubeGroups);
-        gridUpdater.UpdateGridAfterBlast(this);
+
+        gridUpdater.UpdateGridAfterBlast();
     }
 
     public void UpdateFinished()

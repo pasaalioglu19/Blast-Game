@@ -89,6 +89,11 @@ public class BlastHandler : IBlastHandler
         do
         {
             var currentPowerup = matchedPowerups.Dequeue();
+            if(currentPowerup == null)
+            {
+                Debug.Log("sa");
+                continue;
+            }
             int currentX = currentPowerup.GetGridX();
             int currentY = currentPowerup.GetGridY();
 
@@ -99,12 +104,13 @@ public class BlastHandler : IBlastHandler
                 int isBigTnt = CheckAdjacentTnt(currentX, currentY, visitedPowerups, gridArray, gridWidth, gridHeight);
                 matchedPowerups2 = TntBlast(gridArray, gridWidth, gridHeight, currentX, currentY, isBigTnt);
                 //animationManager.TntAnimation(currentTnt.transform.position, isBigTnt);
+                animationManager.TntBlastAnim(currentPowerup.gameObject);
             }
             else if (currentPowerupType == PowerupType.Rocket)
             {
                 Rocket rocketComponent = currentPowerup.GetComponent<Rocket>();
                 matchedPowerups2 = RocketBlast(gridArray, gridWidth, gridHeight, currentX, currentY, rocketComponent.IsHorizontal());
-                animationManager.RocketBlastAnim(currentPowerup.transform.position.x, currentPowerup.transform.position.y, !rocketComponent.IsHorizontal(), gridHeight + 2, rocketComponent.GetRocketHalfSprite());
+                animationManager.RocketBlastAnim(currentPowerup.gameObject, currentPowerup.transform.position.x, currentPowerup.transform.position.y, !rocketComponent.IsHorizontal(), gridHeight + 2, rocketComponent.GetRocketHalfSprite());
             }
             else
             {
@@ -130,7 +136,7 @@ public class BlastHandler : IBlastHandler
                 }
             }
 
-            animationManager.TntBlastAnim(currentPowerup.gameObject);
+
             gridArray[currentX, currentY] = null;
 
             yield return new WaitForSeconds(powerupSequenceDelay);
